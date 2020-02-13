@@ -15,6 +15,7 @@ SYSTEMDDIR ?= $(LIBDIR)/systemd
 UDEVDIR ?= $(SYSCONFDIR)/udev
 UDEVRULESDIR ?= $(UDEVDIR)/rules.d
 DRACUTDIR ?= $(LIBDIR)/dracut
+LIBNVMEDIR = libnvme/
 LIB_DEPENDS =
 
 ifeq ($(LIBUUID),0)
@@ -78,7 +79,10 @@ PLUGIN_OBJS :=					\
 	plugins/shannon/shannon-nvme.o		\
 	plugins/dera/dera-nvme.o
 
-nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
+libnvme:
+	$(MAKE) -C $(LIBNVMEDIR)
+
+nvme: nvme.c nvme.h libnvme $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)
 
 verify-no-dep: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
@@ -104,6 +108,7 @@ all: doc
 clean:
 	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb 70-nvmf-autoconnect.conf
 	$(MAKE) -C Documentation clean
+	$(MAKE) -C $(LIBNVMEDIR) clean
 	$(RM) tests/*.pyc
 	$(RM) verify-no-dep
 
@@ -228,4 +233,4 @@ rpm: dist
 	$(RPMBUILD) --define '_libdir ${LIBDIR}' -ta nvme-$(NVME_VERSION).tar.gz
 
 .PHONY: default doc all clean clobber install-man install-bin install
-.PHONY: dist pkg dist-orig deb deb-light rpm FORCE test
+.PHONY: dist pkg dist-orig deb deb-light rpm FORCE test libnvme
