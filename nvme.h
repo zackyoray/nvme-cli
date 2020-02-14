@@ -23,7 +23,8 @@
 #include "plugin.h"
 #include "util/json.h"
 #include "util/argconfig.h"
-#include "linux/nvme.h"
+
+#include <libnvme.h>
 
 enum nvme_print_flags {
 	NORMAL	= 0,
@@ -103,6 +104,5 @@ int scan_subsystems(struct nvme_topology *t, const char *subsysnqn,
 		    __u32 ns_instance);
 void free_topology(struct nvme_topology *t);
 char *get_nvme_subsnqn(char *path);
-char *nvme_get_ctrl_attr(char *path, const char *attr);
 
 #endif /* _NVME_H */
