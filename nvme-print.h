@@ -9,7 +9,6 @@ void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
 uint64_t int48_to_long(__u8 *data);
 
-void nvme_show_status(__u16 status);
 void nvme_show_relatives(const char *name);
 
 void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
@@ -24,14 +23,14 @@ void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
 	const char *devname, enum nvme_print_flags flags);
 void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	const char *devname, enum nvme_print_flags flags);
-void nvme_show_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname,
+void nvme_show_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 	enum nvme_print_flags flags, size_t len);
 void nvme_show_self_test_log(struct nvme_self_test_log *self_test, const char *devname,
 	enum nvme_print_flags flags);
-void nvme_show_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname,
+void nvme_show_fw_log(struct nvme_firmware_slot *fw_log, const char *devname,
 	enum nvme_print_flags flags);
-void nvme_show_effects_log(struct nvme_effects_log_page *effects, unsigned int flags);
-void nvme_show_changed_ns_list_log(struct nvme_changed_ns_list_log *log,
+void nvme_show_effects_log(struct nvme_cmd_effects_log *effects, unsigned int flags);
+void nvme_show_changed_ns_list_log(struct nvme_ns_list *log,
 	const char *devname, enum nvme_print_flags flags);
 void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
 	__u16 group_id, const char *devname, enum nvme_print_flags flags);
@@ -42,12 +41,10 @@ void nvme_show_single_property(int offset, uint64_t prop, int human);
 void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flags);
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
 	enum nvme_print_flags flags);
-void nvme_show_list_items(struct nvme_topology *t, enum nvme_print_flags flags);
-void nvme_show_subsystem_list(struct nvme_topology *t,
-      enum nvme_print_flags flags);
-void nvme_show_id_nvmset(struct nvme_id_nvmset *nvmset, unsigned nvmset_id,
+void nvme_show_list_items(struct nvme_root *r, enum nvme_print_flags flags);
+void nvme_show_id_nvmset(struct nvme_id_nvmset_list *nvmset, unsigned nvmset_id,
 	enum nvme_print_flags flags);
-void nvme_show_list_secondary_ctrl(const struct nvme_secondary_controllers_list *sc_list,
+void nvme_show_list_secondary_ctrl(const struct nvme_secondary_ctrl_list *sc_list,
 	__u32 count, enum nvme_print_flags flags);
 void nvme_show_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *glist,
 	enum nvme_print_flags flags);

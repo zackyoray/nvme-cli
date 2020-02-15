@@ -22,9 +22,9 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <uuid/uuid.h>
 
 #include "nvme.h"
-#include "nvme-ioctl.h"
 #include "json.h"
 
 #include "suffix.h"
@@ -360,11 +360,11 @@ static void netapp_ontapdevices_print(struct ontapdevice_info *devices,
 
 static int nvme_get_ontap_c2_log(int fd, __u32 nsid, void *buf, __u32 buflen)
 {
-	struct nvme_admin_cmd get_log;
+	struct nvme_passthru_cmd get_log;
 	int err;
 
 	memset(buf, 0, buflen);
-	memset(&get_log, 0, sizeof(struct nvme_admin_cmd));
+	memset(&get_log, 0, sizeof(struct nvme_passthru_cmd));
 
 	get_log.opcode = nvme_admin_get_log_page;
 	get_log.nsid = nsid;
@@ -379,7 +379,7 @@ static int nvme_get_ontap_c2_log(int fd, __u32 nsid, void *buf, __u32 buflen)
 	get_log.cdw10 |= ONTAP_C2_LOG_NSINFO_LSP << 8;
 	get_log.cdw11 = numdu;
 
-	err = nvme_submit_admin_passthru(fd, &get_log);
+	err = nvme_submit_admin_passthru(fd, &get_log, NULL);
 	if (err) {
 		fprintf(stderr, "ioctl error %0x\n", err);
 		return 1;
@@ -404,7 +404,7 @@ static int netapp_smdevices_get_info(int fd, struct smdevice_info *item,
 		return 0; /* not the right model of controller */
 
 	item->nsid = nvme_get_nsid(fd);
-	err = nvme_identify_ns(fd, item->nsid, 0, &item->ns);
+	err = nvme_identify_ns(fd, item->nsid, &item->ns);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace for %s (%s)\n",
 			dev, strerror(err));
@@ -433,14 +433,14 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 
 	item->nsid = nvme_get_nsid(fd);
 
-	err = nvme_identify_ns(fd, item->nsid, 0, &item->ns);
+	err = nvme_identify_ns(fd, item->nsid, &item->ns);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace for %s (%s)\n",
 				dev, strerror(err));
 		return 0;
 	}
 
-	err = nvme_identify_ns_descs(fd, item->nsid, item->nsdesc);
+	err = nvme_identify_ns_descs(fd, item->nsid, (void *)item->nsdesc);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace descriptor for %s (%s)\n",
 				dev, strerror(err));

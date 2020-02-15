@@ -35,7 +35,6 @@
 
 #include "util/parser.h"
 #include "nvme-ioctl.h"
-#include "nvme-status.h"
 #include "fabrics.h"
 
 #include "nvme.h"

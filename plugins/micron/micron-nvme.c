@@ -11,7 +11,6 @@
 #include <sys/stat.h>
 #include "nvme.h"
 #include "nvme-print.h"
-#include "nvme-ioctl.h"
 #include <sys/ioctl.h>
 #include <limits.h>
 
@@ -39,8 +38,8 @@ typedef struct _LogPageHeader_t {
 
 static int micron_fw_commit(int fd, int select)
 {
-	struct nvme_admin_cmd cmd = {
-		.opcode = nvme_admin_activate_fw,
+	struct nvme_passthru_cmd cmd = {
+		.opcode = nvme_admin_fw_commit,
 		.cdw10 = 8,
 		.cdw12 = select,
 	};
@@ -189,7 +188,7 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 static int GetLogPageSize(int nFD, unsigned char ucLogID, int *nLogSize)
 {
 	int err = 0;
-	struct nvme_admin_cmd cmd;
+	struct nvme_passthru_cmd cmd;
 	unsigned int uiXferDwords = 0;
 	unsigned char pTmpBuf[CommonChunkSize] = { 0 };
 	LogPageHeader_t *pLogHeader = NULL;
@@ -202,7 +201,7 @@ static int GetLogPageSize(int nFD, unsigned char ucLogID, int *nLogSize)
 		cmd.cdw10 |= ((uiXferDwords - 1) & 0x0000FFFF) << 16;
 		cmd.data_len = CommonChunkSize;
 		cmd.addr = (__u64) (uintptr_t) & pTmpBuf;
-		err = nvme_submit_passthru(nFD, NVME_IOCTL_ADMIN_CMD, &cmd);
+		err = nvme_submit_admin_passthru(nFD, &cmd, NULL);
 		if (err == 0) {
 			pLogHeader = (LogPageHeader_t *) pTmpBuf;
 			LogPageHeader_t *pLogHeader1 = (LogPageHeader_t *) pLogHeader;
@@ -218,7 +217,7 @@ static int GetLogPageSize(int nFD, unsigned char ucLogID, int *nLogSize)
 static int NVMEGetLogPage(int nFD, unsigned char ucLogID, unsigned char *pBuffer, int nBuffSize)
 {
 	int err = 0;
-	struct nvme_admin_cmd cmd = { 0 };
+	struct nvme_passthru_cmd cmd = { 0 };
 	unsigned int uiNumDwords = (unsigned int)nBuffSize / sizeof(unsigned int);
 	unsigned int uiMaxChunk = uiNumDwords;
 	unsigned int uiNumChunks = 1;
@@ -264,7 +263,7 @@ static int NVMEGetLogPage(int nFD, unsigned char ucLogID, unsigned char *pBuffer
 		cmd.addr = (__u64) (uintptr_t) pTempPtr;
 		cmd.nsid = 0xFFFFFFFF;
 		cmd.data_len = uiXferDwords * 4;
-		err = nvme_submit_passthru(nFD, NVME_IOCTL_ADMIN_CMD, &cmd);
+		err = nvme_submit_admin_passthru(nFD, &cmd, NULL);
 		ullBytesRead += uiXferDwords * 4;
 		pTempPtr = pBuffer + ullBytesRead;
 	}
@@ -298,7 +297,7 @@ static int NVMEResetLog(int nFD, unsigned char ucLogID, int nBufferSize,
 
 static int GetCommonLogPage(int nFD, unsigned char ucLogID, unsigned char **pBuffer, int nBuffSize)
 {
-	struct nvme_admin_cmd cmd;
+	struct nvme_passthru_cmd cmd;
 	int err = 0;
 	unsigned char pTmpBuf[CommonChunkSize] = { 0 };
 	unsigned int uiMaxChunk = 0;
@@ -333,7 +332,7 @@ static int GetCommonLogPage(int nFD, unsigned char ucLogID, unsigned char **pBuf
 		cmd.data_len = uiXferDwords * 4;
 		cmd.addr = (__u64) (uintptr_t) pTmpBuf;
 
-		err = nvme_submit_passthru(nFD, NVME_IOCTL_ADMIN_CMD, &cmd);
+		err = nvme_submit_admin_passthru(nFD, &cmd, NULL);
 
 		if (nBytesRemaining >= (int)(uiMaxChunk * 4)) {
 			memcpy(&pTempPtr[nBytesRead], pTmpBuf, uiMaxChunk * 4);
@@ -488,7 +487,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *cmd, struct 
 		return -1;
 	}
 
-	err = nvme_smart_log(fd, 0xffffffff, &smart_log);
+	err = nvme_get_log_smart(fd, 0xffffffff, true, &smart_log);
 	if (!err) {
 		printf("Micron temperature information:\n");
 		temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]);
@@ -877,7 +876,7 @@ static void GetSmartlogData(int fd, const char *strCtrlDirName)
 	char tempFolder[PATH_MAX] = { 0 };
 	FILE *fpOutFile = NULL;
 	struct nvme_smart_log smart_log;
-	if (nvme_smart_log(fd, -1, &smart_log) == 0) {
+	if (nvme_get_log_smart(fd, -1, true, &smart_log) == 0) {
 		sprintf(tempFolder, "%s/%s", strCtrlDirName, "smart_data.bin");
 		fpOutFile = fopen(tempFolder, "wb");
 		if (fwrite(&smart_log, 1, sizeof(smart_log), fpOutFile) != sizeof(smart_log))
@@ -897,7 +896,7 @@ static void GetErrorlogData(int fd, int entries, const char *strCtrlDirName)
 	if (error_log == NULL)
 		return;
 
-	if (nvme_error_log(fd, entries, error_log) == 0) {
+	if (nvme_get_log_error(fd, entries, true, error_log) == 0) {
 		sprintf(tempFolder, "%s/%s", strCtrlDirName,
 			"error_information_log.bin");
 		fpOutFile = fopen(tempFolder, "wb");
@@ -915,7 +914,7 @@ static void GetNSIDDInfo(int fd, const char *strCtrlDirName, int nsid)
 	char strFileName[PATH_MAX] = { 0 };
 	FILE *fpOutFile = NULL;
 	struct nvme_id_ns ns;
-	if (nvme_identify_ns(fd, nsid, 0, &ns) == 0) {
+	if (nvme_identify_ns(fd, nsid, &ns) == 0) {
 		sprintf(tempFolder, "identify_namespace_%d_data.bin.bin", nsid);
 		sprintf(strFileName, "%s/%s", strCtrlDirName, tempFolder);
 		fpOutFile = fopen(strFileName, "wb");

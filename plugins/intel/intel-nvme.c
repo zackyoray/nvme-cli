@@ -5,12 +5,9 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-#include "linux/nvme_ioctl.h"
-
 #include "common.h"
 #include "nvme.h"
 #include "nvme-print.h"
-#include "nvme-ioctl.h"
 #include "json.h"
 #include "plugin.h"
 
@@ -293,7 +290,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	if (fd < 0)
 		return fd;
 
-	err = nvme_get_log(fd, cfg.namespace_id, 0xca, false,
+	err = nvme_get_log(fd, 0xca, cfg.namespace_id, 0, 0, 0, false, 0,
 			   sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (cfg.json)
@@ -333,7 +330,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 	if (fd < 0)
 		return fd;
 
-	err = nvme_get_log(fd, NVME_NSID_ALL, 0xdd, false,
+	err = nvme_get_log(fd, 0xdd, NVME_NSID_ALL, 0, 0, 0, false, 0,
 			   sizeof(log), log);
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -395,7 +392,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	if (fd < 0)
 		return fd;
 
-	err = nvme_get_log(fd, NVME_NSID_ALL, 0xc5, false,
+	err = nvme_get_log(fd, 0xc5, NVME_NSID_ALL, 0, 0, 0, false, 0,
 			   sizeof(stats), &stats);
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -816,8 +813,8 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
-			   false, sizeof(stats), &stats);
+	err = nvme_get_log(fd, cfg.write ? 0xc2 : 0xc1, NVME_NSID_ALL, 0, 0, 0,
+			   false, 0, sizeof(stats), &stats);
 	if (!err) {
 		if (flags & JSON)
 			json_lat_stats(&stats, cfg.write);
@@ -940,7 +937,7 @@ static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
 
 	dword_tfer = min(max_tfer, total_size);
 	while (total_size > 0) {
-		err = nvme_submit_admin_passthru(ioctl_fd, cmd);
+		err = nvme_submit_admin_passthru(ioctl_fd, cmd, NULL);
 		if (err) {
 			fprintf(stderr,
 				"failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n",

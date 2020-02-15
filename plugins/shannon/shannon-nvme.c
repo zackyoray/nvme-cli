@@ -5,12 +5,9 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-#include "linux/nvme_ioctl.h"
-
 #include "common.h"
 #include "nvme.h"
 #include "nvme-print.h"
-#include "nvme-ioctl.h"
 #include "json.h"
 #include "plugin.h"
 
@@ -138,7 +135,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
-	err = nvme_get_log(fd, cfg.namespace_id, 0xca, false,
+	err = nvme_get_log(fd, 0xca, cfg.namespace_id, 0, 0, 0, false, 0,
 		   sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -228,7 +225,7 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 		memset(buf, 0, cfg.data_len);
 	}
 
-	err = nvme_get_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.sel, cfg.cdw11,
+	err = nvme_get_features(fd, cfg.feature_id, cfg.namespace_id, cfg.sel, cfg.cdw11, 0,
 			cfg.data_len, buf, &result);
 	if (!err) {
 		printf("get-feature:0x%02x (%s), %s value: %#08x\n", cfg.feature_id,
@@ -340,8 +337,8 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 		}
 	}
 
-	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value,
-				0, cfg.save, cfg.data_len, buf, &result);
+	err = nvme_set_features(fd, cfg.feature_id, cfg.namespace_id, cfg.value,
+				0, cfg.save, 0, 0, cfg.data_len, buf, &result);
 	if (err < 0) {
 		perror("set-feature");
 		goto free;

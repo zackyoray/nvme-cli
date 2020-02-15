@@ -32,7 +32,6 @@
 
 #include "nvme-lightnvm.h"
 #include "nvme-print.h"
-#include "nvme-ioctl.h"
 
 static int lnvm_open(void)
 {
@@ -437,14 +436,14 @@ static void show_lnvm_id_ns(struct nvme_nvm_id *id, unsigned int flags)
 
 int lnvm_get_identity(int fd, int nsid, struct nvme_nvm_id *nvm_id)
 {
-	struct nvme_admin_cmd cmd = {
+	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_nvm_admin_identity,
 		.nsid		= nsid,
 		.addr		= (__u64)(uintptr_t)nvm_id,
 		.data_len	= sizeof(struct nvme_nvm_id),
 	};
 
-	return nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	return nvme_submit_admin_passthru(fd, &cmd, NULL);
 }
 
 int lnvm_do_id_ns(int fd, int nsid, unsigned int flags)
@@ -518,8 +517,8 @@ int lnvm_do_chunk_log(int fd, __u32 nsid, __u32 data_len, void *data,
 {
 	int err;
 
-	err = nvme_get_log13(fd, nsid, NVM_LID_CHUNK_INFO, 0, 0, 0,
-			false, data_len, data);
+	err = nvme_get_log(fd, NVM_LID_CHUNK_INFO, nsid, 0, 0, 0,
+			false, 0, data_len, data);
 	if (err > 0) {
 		fprintf(stderr, "NVMe Status:%s(%x) NSID:%d\n",
 			nvme_status_to_string(err), err, nsid);
@@ -527,7 +526,7 @@ int lnvm_do_chunk_log(int fd, __u32 nsid, __u32 data_len, void *data,
 		goto out;
 	} else if (err < 0) {
 		err = -errno;
-		perror("nvme_get_log13");
+		perror("nvme_get_log");
 
 		goto out;
 	}
@@ -576,7 +575,7 @@ static int __lnvm_do_get_bbtbl(int fd, struct nvme_nvm_id12 *id,
 	void *tmp = &cmd;
 	struct nvme_passthru_cmd *nvme_cmd = tmp;
 
-	err = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, nvme_cmd);
+	err = nvme_submit_admin_passthru(fd, nvme_cmd, NULL);
 	if (err > 0) {
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 			nvme_status_to_string(err), err);
@@ -644,7 +643,7 @@ static int __lnvm_do_set_bbtbl(int fd, struct ppa_addr ppa, __u8 value)
 	void *tmp = &cmd;
 	struct nvme_passthru_cmd *nvme_cmd = tmp;
 
-	err = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, nvme_cmd);
+	err = nvme_submit_admin_passthru(fd, nvme_cmd, NULL);
 	if (err > 0) {
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 			nvme_status_to_string(err), err);

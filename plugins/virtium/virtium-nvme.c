@@ -9,10 +9,8 @@
 #include <time.h>
 #include <locale.h>
 
-#include "linux/nvme_ioctl.h"
 #include "nvme.h"
 #include "nvme-print.h"
-#include "nvme-ioctl.h"
 #include "plugin.h"
 #include "argconfig.h"
 #include "suffix.h"
@@ -35,7 +33,7 @@ struct vtview_log_header {
 	char			test_name[256];
 	long int		time_stamp;
 	struct nvme_id_ctrl	raw_ctrl;
-	struct nvme_firmware_log_page   raw_fw;
+	struct nvme_firmware_slot raw_fw;
 };
 
 struct vtview_smart_log_entry {
@@ -273,7 +271,7 @@ static int vt_add_entry_to_log(const int fd, const char *path, const struct vtvi
 		return -1;
 	}
 
-	ret = nvme_identify_ns(fd, nsid, 0, &smart.raw_ns);
+	ret = nvme_identify_ns(fd, nsid, &smart.raw_ns);
 	if (ret) {
 		printf("Cannot read namespace identify\n");
 		return -1;
@@ -285,7 +283,7 @@ static int vt_add_entry_to_log(const int fd, const char *path, const struct vtvi
 		return -1;
 	}
 
-	ret = nvme_smart_log(fd, NVME_NSID_ALL, &smart.raw_smart);
+	ret = nvme_get_log_smart(fd, NVME_NSID_ALL, true, &smart.raw_smart);
 	if (ret) {
 		printf("Cannot read device SMART log\n");
 		return -1;
@@ -326,7 +324,7 @@ static int vt_update_vtview_log_header(const int fd, const char *path, const str
 		return -1;
 	}
 
-	ret = nvme_fw_log(fd, &header.raw_fw);
+	ret = nvme_get_log_fw_slot(fd, true, &header.raw_fw);
 	if (ret) {
 		printf("Cannot read device firmware log\n");
 		return -1;

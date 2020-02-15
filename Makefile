@@ -1,5 +1,5 @@
 CFLAGS ?= -O2 -g -Wall -Werror
-override CFLAGS += -std=gnu99 -I. -L$(LIBNVMEDIR)src/ -I$(LIBNVMEDIR)src/ -lnvme
+override CFLAGS += -std=gnu99
 override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
@@ -16,6 +16,7 @@ UDEVDIR ?= $(SYSCONFDIR)/udev
 UDEVRULESDIR ?= $(UDEVDIR)/rules.d
 DRACUTDIR ?= $(LIBDIR)/dracut
 LIBNVMEDIR = libnvme/
+LDFLAGS ?= -I. -L$(LIBNVMEDIR)src/ -I$(LIBNVMEDIR)src/ -lnvme
 LIB_DEPENDS =
 
 ifeq ($(LIBUUID),0)
@@ -58,9 +59,7 @@ override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
 
 NVME_DPKG_VERSION=1~`lsb_release -sc`
 
-OBJS := nvme-print.o nvme-ioctl.o \
-	nvme-lightnvm.o fabrics.o nvme-models.o plugin.o \
-	nvme-status.o nvme-filters.o nvme-topology.o
+OBJS := nvme-print.o nvme-lightnvm.o nvme-models.o plugin.o nvme-filters.o
 
 UTIL_OBJS := util/argconfig.o util/suffix.o util/json.o util/parser.o
 
@@ -88,13 +87,13 @@ nvme: nvme.c nvme.h libnvme $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FIL
 verify-no-dep: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@ $(OBJS) $(LDFLAGS)
 
-nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h util/argconfig.h util/suffix.h nvme-lightnvm.h fabrics.h
+nvme.o: nvme.c nvme.h nvme-print.h util/argconfig.h util/suffix.h nvme-lightnvm.h fabrics.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -c $< $(LDFLAGS)
 
-%.o: %.c %.h nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
+%.o: %.c %.h nvme.h nvme-print.h util/argconfig.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $< $(LDFLAGS)
 
-%.o: %.c nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
+%.o: %.c nvme.h nvme-print.h util/argconfig.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $< $(LDFLAGS)
 
 doc: $(NVME)

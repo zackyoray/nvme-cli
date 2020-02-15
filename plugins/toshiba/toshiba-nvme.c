@@ -7,10 +7,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#include "linux/nvme_ioctl.h"
 #include "nvme.h"
 #include "nvme-print.h"
-#include "nvme-ioctl.h"
 #include "plugin.h"
 #include "argconfig.h"
 #include "suffix.h"
@@ -67,7 +65,7 @@ static int nvme_sct_op(int fd,  __u32 opcode, __u32 cdw10, __u32 cdw11, void* da
 	int err = 0;
 
 	__u32 result;
-	err = nvme_passthru(fd, NVME_IOCTL_ADMIN_CMD, opcode, flags, rsvd,
+	err = nvme_admin_passthru(fd, opcode, flags, rsvd,
 				namespace_id, cdw2, cdw3, cdw10,
 				cdw11, cdw12, cdw13, cdw14, cdw15,
 				data_len, data, metadata_len, metadata,
@@ -392,7 +390,7 @@ static int nvme_get_vendor_log(int fd, __u32 namespace_id, int log_page,
 	if (err) {
 		goto end;
 	}
-	err = nvme_get_log(fd, namespace_id, log_page, false,
+	err = nvme_get_log(fd, log_page, namespace_id, 0, 0, 0, false, 0,
 		    log_len, log);
 	if (err) {
 		fprintf(stderr, "%s: couldn't get log 0x%x\n", __func__,
@@ -550,8 +548,8 @@ static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 	if (err)
 		goto end;
 
-	err = nvme_set_feature(fd, namespace_id, feature_id, value, cdw12, save,
-				0, NULL, &result);
+	err = nvme_set_features(fd, feature_id, namespace_id, value, cdw12, save,
+				0, 0, 0, NULL, &result);
 	if (err)
 		fprintf(stderr, "%s: couldn't clear PCIe correctable errors \n",
 			__func__);

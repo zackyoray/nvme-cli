@@ -26,11 +26,8 @@
 
 #include <sys/stat.h>
 
-#include "linux/nvme_ioctl.h"
-
 #include "nvme.h"
 #include "nvme-print.h"
-#include "nvme-ioctl.h"
 #include "plugin.h"
 #include "json.h"
 
@@ -88,8 +85,7 @@ static int huawei_get_nvme_info(int fd, struct huawei_list_item *item, const cha
 		item->huawei_device = true;
 
 	item->nsid = nvme_get_nsid(fd);
-	err = nvme_identify_ns(fd, item->nsid,
-							0, &item->ns);
+	err = nvme_identify_ns(fd, item->nsid, &item->ns);
 	if (err)
 		return err;
 
