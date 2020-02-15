@@ -27,7 +27,7 @@
 #include <sys/stat.h>
 
 #include "nvme.h"
-#include "nvme-print.h"
+#include "print.h"
 #include "plugin.h"
 #include "json.h"
 

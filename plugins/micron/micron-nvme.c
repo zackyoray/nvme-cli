@@ -10,7 +10,7 @@
 #include <libgen.h>
 #include <sys/stat.h>
 #include "nvme.h"
-#include "nvme-print.h"
+#include "print.h"
 #include <sys/ioctl.h>
 #include <limits.h>
 

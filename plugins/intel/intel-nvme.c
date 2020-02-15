@@ -7,7 +7,7 @@
 
 #include "common.h"
 #include "nvme.h"
-#include "nvme-print.h"
+#include "print.h"
 #include "json.h"
 #include "plugin.h"
 

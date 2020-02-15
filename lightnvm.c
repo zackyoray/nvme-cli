@@ -30,8 +30,8 @@
 #include <errno.h>
 #include <inttypes.h>
 
-#include "nvme-lightnvm.h"
-#include "nvme-print.h"
+#include "lightnvm.h"
+#include "print.h"
 
 static int lnvm_open(void)
 {

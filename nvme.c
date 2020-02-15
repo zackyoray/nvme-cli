@@ -28,7 +28,7 @@
 #include <uuid.h>
 
 #include "nvme.h"
-#include "nvme-print.h"
+#include "print.h"
 #include "plugin.h"
 #include "argconfig.h"
 
@@ -37,7 +37,7 @@
 #define MAX_DISC_RETRIES	10
 
 #define CREATE_CMD
-#include "nvme-builtin.h"
+#include "builtin.h"
 
 #define ARRAY_SIZE(x) sizeof(x) / sizeof(*x)
 

@@ -1,5 +1,5 @@
 #undef CMD_INC_FILE
-#define CMD_INC_FILE nvme-builtin
+#define CMD_INC_FILE builtin
 
 #if !defined(NVME_BUILTIN) || defined(CMD_HEADER_MULTI_READ)
 #define NVME_BUILTIN

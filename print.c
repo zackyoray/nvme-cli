@@ -7,9 +7,9 @@
 
 #include <uuid/uuid.h>
 
-#include "nvme-print.h"
+#include "print.h"
+#include "models.h"
 #include "util/json.h"
-#include "nvme-models.h"
 #include "util/suffix.h"
 #include "common.h"
 

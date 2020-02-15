@@ -10,7 +10,7 @@
 #include <sys/time.h>
 
 #include "nvme.h"
-#include "nvme-print.h"
+#include "print.h"
 #include "plugin.h"
 
 #include "argconfig.h"
