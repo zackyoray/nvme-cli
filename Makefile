@@ -117,6 +117,9 @@ clobber: clean
 install-man:
 	$(MAKE) -C Documentation install-no-build
 
+install-lib:
+	$(MAKE) -C libnvme install
+
 install-bin: default
 	$(INSTALL) -d $(DESTDIR)$(SBINDIR)
 	$(INSTALL) -m 755 nvme $(DESTDIR)$(SBINDIR)
@@ -157,7 +160,7 @@ install-etc:
 		$(INSTALL) -m 644 -T ./etc/discovery.conf.in $(DESTDIR)$(SYSCONFDIR)/nvme/discovery.conf; \
 	fi
 
-install-spec: install-bin install-man install-bash-completion install-zsh-completion install-etc install-systemd install-udev install-dracut
+install-spec: install-lib install-bin install-man install-bash-completion install-zsh-completion install-etc install-systemd install-udev install-dracut
 install: install-spec install-hostparams
 
 nvme.spec: nvme.spec.in NVME-VERSION-FILE
