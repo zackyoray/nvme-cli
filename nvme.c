@@ -222,6 +222,15 @@ int validate_output_format(char *format)
 	return -EINVAL;
 }
 
+void nvme_show_status(const char *prefix, int status)
+{
+	if (status < 0)
+		perror(prefix);
+	else
+		fprintf(stderr, "%s: nvme status: %s(%#x)\n", prefix,
+			nvme_status_to_string(status), status);
+}
+
 static int get_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_smart_log log;
