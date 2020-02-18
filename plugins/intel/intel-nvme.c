@@ -7,7 +7,6 @@
 
 #include "common.h"
 #include "nvme.h"
-#include "print.h"
 #include "json.h"
 #include "plugin.h"
 
@@ -302,7 +301,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	}
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+					nvme_status_to_string(err, false), err);
 	return err;
 }
 
@@ -339,7 +338,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 			d_raw((unsigned char *)&log, sizeof(log));
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+					nvme_status_to_string(err, false), err);
 	return err;
 }
 
@@ -401,7 +400,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 			d_raw((unsigned char *)&stats, sizeof(stats));
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+					nvme_status_to_string(err, false), err);
 	return err;
 }
 
@@ -811,20 +810,20 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		goto close_fd;
 
 	if (cfg.raw_binary)
-		flags = BINARY;
+		flags = NVME_JSON_BINARY;
 
 	err = nvme_get_log(fd, cfg.write ? 0xc2 : 0xc1, NVME_NSID_ALL, 0, 0, 0,
 			   false, 0, sizeof(stats), &stats);
 	if (!err) {
-		if (flags & JSON)
-			json_lat_stats(&stats, cfg.write);
-		else if (flags & BINARY)
+		if (flags & NVME_JSON_HUMAN)
+			show_lat_stats(&stats, cfg.write);
+		else if (flags & NVME_JSON_BINARY)
 			d_raw((unsigned char *)&stats, sizeof(stats));
 		else
-			show_lat_stats(&stats, cfg.write);
+			json_lat_stats(&stats, cfg.write);
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+					nvme_status_to_string(err, false), err);
 
 close_fd:
 	close(fd);
@@ -1203,7 +1202,7 @@ static int get_internal_log(int argc, char **argv, struct command *command,
  out:
 	if (err > 0) {
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+				nvme_status_to_string(err, false), err);
 	} else if (err < 0) {
 		perror("intel log");
 		err = EIO;

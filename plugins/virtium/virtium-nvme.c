@@ -10,7 +10,6 @@
 #include <locale.h>
 
 #include "nvme.h"
-#include "print.h"
 #include "plugin.h"
 #include "argconfig.h"
 #include "suffix.h"

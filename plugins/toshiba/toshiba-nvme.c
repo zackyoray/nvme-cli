@@ -8,7 +8,6 @@
 #include <stdbool.h>
 
 #include "nvme.h"
-#include "print.h"
 #include "plugin.h"
 #include "argconfig.h"
 #include "suffix.h"
@@ -474,7 +473,7 @@ static int vendor_log(int argc, char **argv, struct command *cmd, struct plugin 
 		fprintf(stderr, "%s: couldn't get vendor log 0x%x\n", __func__, cfg.log);
 end:
 	if (err > 0)
-		fprintf(stderr, "%s: NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(err), err);
+		fprintf(stderr, "%s: NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(err, false), err);
 	return err;
 }
 
@@ -517,7 +516,7 @@ static int internal_log(int argc, char **argv, struct command *cmd, struct plugi
 		fprintf(stderr, "%s: couldn't get fw log \n", __func__);
 	if (err > 0)
 		fprintf(stderr, "%s: NVMe Status:%s(%x)\n", __func__,
-			nvme_status_to_string(err), err);
+			nvme_status_to_string(err, false), err);
 	return err;
 }
 
@@ -556,6 +555,6 @@ static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 end:
 	if (err > 0)
 		fprintf(stderr, "%s: NVMe Status:%s(%x)\n", __func__,
-			nvme_status_to_string(err), err);
+			nvme_status_to_string(err, false), err);
 	return err;
 }

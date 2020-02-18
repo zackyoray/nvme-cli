@@ -10,7 +10,6 @@
 #include <libgen.h>
 #include <sys/stat.h>
 #include "nvme.h"
-#include "print.h"
 #include <sys/ioctl.h>
 #include <limits.h>
 
@@ -449,7 +448,7 @@ static int micron_selective_download(int argc, char **argv, struct command *cmd,
 			goto out;
 		} else if (err != 0) {
 			fprintf(stderr, "NVME Admin command error:%s(%x)\n",
-				nvme_status_to_string(err), err);
+				nvme_status_to_string(err, false), err);
 			goto out;
 		}
 		fw_buf += xfer;

@@ -1,6 +1,6 @@
 CFLAGS ?= -O2 -g -Wall -Werror
 override CFLAGS += -std=gnu99
-override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
+override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__ -ljson-c
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
 HAVE_SYSTEMD = $(shell pkg-config --exists systemd  --atleast-version=232; echo $$?)
@@ -59,9 +59,9 @@ override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
 
 NVME_DPKG_VERSION=1~`lsb_release -sc`
 
-OBJS := print.o lightnvm.o models.o plugin.o
+OBJS := models.o plugin.o
 
-UTIL_OBJS := util/argconfig.o util/suffix.o util/json.o util/parser.o
+UTIL_OBJS := util/argconfig.o util/suffix.o util/json.o util/parser.o util/user-types.o
 
 PLUGIN_OBJS :=					\
 	plugins/intel/intel-nvme.o		\
@@ -87,13 +87,13 @@ nvme: nvme.c nvme.h libnvme $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FIL
 verify-no-dep: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@ $(OBJS) $(LDFLAGS)
 
-nvme.o: nvme.c nvme.h print.h util/argconfig.h util/suffix.h lightnvm.h
+nvme.o: nvme.c nvme.h util/argconfig.h util/suffix.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -c $< $(LDFLAGS)
 
-%.o: %.c %.h nvme.h print.h util/argconfig.h
+%.o: %.c %.h nvme.h util/argconfig.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $< $(LDFLAGS)
 
-%.o: %.c nvme.h print.h util/argconfig.h
+%.o: %.c nvme.h util/argconfig.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $< $(LDFLAGS)
 
 doc: $(NVME)

@@ -10,7 +10,6 @@
 #include <sys/time.h>
 
 #include "nvme.h"
-#include "print.h"
 #include "plugin.h"
 
 #include "argconfig.h"
@@ -203,7 +202,7 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 
 exit:
 	if (err > 0)
-		fprintf(stderr, "\nNVMe status:%s(0x%x)\n",	nvme_status_to_string(err), err);
+		fprintf(stderr, "\nNVMe status:%s(0x%x)\n",	nvme_status_to_string(err, false), err);
 
 	return err;
 }
