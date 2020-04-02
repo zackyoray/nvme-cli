@@ -85,6 +85,7 @@ static struct config {
 	bool persistent;
 	bool quiet;
 	bool matching_only;
+	int pda;
 } cfg = { NULL };
 
 struct connect_args {
@@ -851,6 +852,9 @@ static int build_options(char *argstr, int max_len, bool discover)
 				cfg.ctrl_loss_tmo, false) ||
 	    add_int_argument(&argstr, &max_len, "tos",
 				cfg.tos, true) ||
+				cfg.ctrl_loss_tmo) ||
+	    add_int_argument(&argstr, &max_len, "pda_size",
+				cfg.pda, true) ||
 	    add_bool_argument(&argstr, &max_len, "duplicate_connect",
 				cfg.duplicate_connect) ||
 	    add_bool_argument(&argstr, &max_len, "disable_sqflow",
@@ -1037,6 +1041,13 @@ retry:
 
 	if (cfg.data_digest) {
 		len = sprintf(p, ",data_digest");
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+	}
+
+	if (cfg.pda)	{
+		len = sprintf(p, ",pda_size=%d",cfg.pda);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
@@ -1350,6 +1361,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_INT("reconnect-delay", 'c', &cfg.reconnect_delay, "reconnect timeout period in seconds"),
 		OPT_INT("ctrl-loss-tmo",   'l', &cfg.ctrl_loss_tmo,   "controller loss timeout period in seconds"),
 		OPT_INT("tos",             'T', &cfg.tos,             "type of service"),
+		OPT_INT("pda_size",        'B', &cfg.pda,             "padding alinment of pdu (TCP transport)"),
 		OPT_FLAG("hdr_digest",     'g', &cfg.hdr_digest,      "enable transport protocol header digest (TCP transport)"),
 		OPT_FLAG("data_digest",    'G', &cfg.data_digest,     "enable transport protocol data digest (TCP transport)"),
 		OPT_INT("nr-io-queues",    'i', &cfg.nr_io_queues,    "number of io queues to use (default is core count)"),
@@ -1416,6 +1428,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		OPT_INT("reconnect-delay",    'c', &cfg.reconnect_delay,   "reconnect timeout period in seconds"),
 		OPT_INT("ctrl-loss-tmo",      'l', &cfg.ctrl_loss_tmo,     "controller loss timeout period in seconds"),
 		OPT_INT("tos",                'T', &cfg.tos,               "type of service"),
+		OPT_INT("pda_size",           'B', &cfg.pda,               "padding alinment of pdu (TCP transport)"),
 		OPT_FLAG("duplicate-connect", 'D', &cfg.duplicate_connect, "allow duplicate connections between same transport host and subsystem port"),
 		OPT_FLAG("disable-sqflow",    'd', &cfg.disable_sqflow,    "disable controller sq flow control (default false)"),
 		OPT_FLAG("hdr-digest",        'g', &cfg.hdr_digest,        "enable transport protocol header digest (TCP transport)"),
